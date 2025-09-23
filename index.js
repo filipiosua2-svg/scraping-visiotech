@@ -1,15 +1,16 @@
 import express from "express";
-import puppeteer from "puppeteer";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz (para probar que el servidor está vivo)
+// Endpoint raíz (comprobación rápida de que funciona)
 app.get("/", (req, res) => {
   res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
 });
 
-// Endpoint para hacer scraping
+// Endpoint de scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -18,38 +19,27 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    });
-
-    const page = await browser.newPage();
-
-    // URL de búsqueda
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
-    await page.goto(url, { waitUntil: "domcontentloaded" });
+    const { data } = await axios.get(url);
 
-    // Extraer datos del primer resultado
-    const data = await page.evaluate(() => {
-      const titleEl = document.querySelector(".product-title");
-      const priceEl = document.querySelector(".price");
+    const $ = cheerio.load(data);
 
-      return {
-        titulo: titleEl ? titleEl.innerText.trim() : "No encontrado",
-        precio: priceEl ? priceEl.innerText.trim() : "Sin precio"
-      };
-    });
+    const titleEl = $(".product-title").first();
+    const priceEl = $(".price").first();
 
-    await browser.close();
+    const result = {
+      titulo: titleEl.text().trim() || "No encontrado",
+      precio: priceEl.text().trim() || "Sin precio"
+    };
 
-    res.json(data);
-  } catch (error) {
-    console.error("Error en scraping:", error);
+    res.json(result);
+  } catch (err) {
+    console.error("Error en scraping:", err.message);
     res.status(500).json({ error: "Fallo en el scraping" });
   }
 });
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(Servidor corriendo en puerto ${PORT});
+  console.log("Servidor corriendo en puerto " + PORT);
 });
