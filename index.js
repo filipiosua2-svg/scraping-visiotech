@@ -1,10 +1,10 @@
 import express from "express";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "chromium";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint para hacer scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
   if (!producto) {
@@ -13,16 +13,15 @@ app.get("/scrape", async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      headless: true,
+      executablePath: chromium.path, // usamos el binario ya instalado
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: true,
     });
-    const page = await browser.newPage();
 
-    // Ir a la página de búsqueda
+    const page = await browser.newPage();
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
     await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Extraer título y precio del primer resultado
     const data = await page.evaluate(() => {
       const titleEl = document.querySelector(".product-title");
       const priceEl = document.querySelector(".price");
@@ -34,12 +33,11 @@ app.get("/scrape", async (req, res) => {
 
     await browser.close();
     res.json({ producto, ...data });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Start
 app.listen(PORT, () => {
-  console.log(✅ Servidor corriendo en http://localhost:${PORT});
+  console.log(Servidor corriendo en http://localhost:${PORT});
 });
