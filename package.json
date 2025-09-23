@@ -1,17 +1,15 @@
 {
   "name": "raspado-visiotech",
   "version": "1.0.0",
-  "description": "API ligera para consultar Visiotech desde Render",
+  "description": "Microservicio Node.js para scrapear productos de Visiotech en Render",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
-    "express": "^4.18.2",
-    "tough-cookie": "^4.1.3",
-    "axios-cookiejar-support": "^6.0.2"
+    "express": "^4.18.2"
   }
 }
