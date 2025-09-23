@@ -1,10 +1,15 @@
 import express from "express";
-import axios from "axios";
-import * as cheerio from "cheerio";
+import puppeteer from "puppeteer";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Endpoint raíz (para probar que el servidor está vivo)
+app.get("/", (req, res) => {
+  res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
+});
+
+// Endpoint para hacer scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -13,26 +18,38 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
+
+    const page = await browser.newPage();
+
+    // URL de búsqueda
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
-    const { data } = await axios.get(url);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    const $ = cheerio.load(data);
+    // Extraer datos del primer resultado
+    const data = await page.evaluate(() => {
+      const titleEl = document.querySelector(".product-title");
+      const priceEl = document.querySelector(".price");
 
-    const titleEl = $(".product-title").first();
-    const priceEl = $(".price").first();
+      return {
+        titulo: titleEl ? titleEl.innerText.trim() : "No encontrado",
+        precio: priceEl ? priceEl.innerText.trim() : "Sin precio"
+      };
+    });
 
-    const result = {
-      titulo: titleEl.text().trim() || "No encontrado",
-      precio: priceEl.text().trim() || "Sin precio"
-    };
+    await browser.close();
 
-    res.json(result);
-  } catch (err) {
-    console.error("Error en scraping:", err.message);
+    res.json(data);
+  } catch (error) {
+    console.error("Error en scraping:", error);
     res.status(500).json({ error: "Fallo en el scraping" });
   }
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
-  console.log("Servidor corriendo en puerto " + PORT);
+  console.log(Servidor corriendo en puerto ${PORT});
 });
