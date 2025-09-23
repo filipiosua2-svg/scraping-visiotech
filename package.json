@@ -1,7 +1,7 @@
 {
-  "name": "scraping-visiotech",
+  "name": "raspado-visiotech",
   "version": "1.0.0",
-  "description": "Scraper para Visiotech desplegado en Render",
+  "description": "Scraper ligero para Visiotech en Render",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "puppeteer": "^21.0.0"
+    "puppeteer-core": "^21.3.8",
+    "chromium": "^3.0.2"
   }
 }
