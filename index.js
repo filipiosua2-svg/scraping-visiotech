@@ -20,14 +20,12 @@ app.get("/scrape", async (req, res) => {
 
     const page = await browser.newPage();
 
-    // URL con template string ✅
     const url = `https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(
       producto
     )}`;
 
     await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Extraer título y precio del primer resultado
     const data = await page.evaluate(() => {
       const titleEl = document.querySelector(".product-title");
       const priceEl = document.querySelector(".price");
