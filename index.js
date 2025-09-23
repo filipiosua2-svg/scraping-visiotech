@@ -5,6 +5,12 @@ import * as cheerio from "cheerio";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Endpoint raíz (comprobación rápida de que funciona)
+app.get("/", (req, res) => {
+  res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
+});
+
+// Endpoint de scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -33,6 +39,7 @@ app.get("/scrape", async (req, res) => {
   }
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
