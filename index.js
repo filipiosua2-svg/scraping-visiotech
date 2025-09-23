@@ -4,7 +4,7 @@ import puppeteer from "puppeteer";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint para hacer scraping
+// Endpoint para scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
