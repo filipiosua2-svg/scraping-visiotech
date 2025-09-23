@@ -5,12 +5,6 @@ import * as cheerio from "cheerio";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz (para probar que funciona en Render)
-app.get("/", (req, res) => {
-  res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
-});
-
-// Endpoint de scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -19,7 +13,6 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    // 🚀 AQUÍ va con backticks
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
     const { data } = await axios.get(url);
 
@@ -40,7 +33,6 @@ app.get("/scrape", async (req, res) => {
   }
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
