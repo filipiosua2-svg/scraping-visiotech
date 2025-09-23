@@ -2,14 +2,13 @@ import express from "express";
 import puppeteer from "puppeteer";
 
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
-// Endpoint para scraping
-app.post("/scrape", async (req, res) => {
-  const { producto } = req.body;
-
+// Endpoint para hacer scraping
+app.get("/scrape", async (req, res) => {
+  const producto = req.query.producto;
   if (!producto) {
-    return res.status(400).json({ error: "Falta el campo 'producto'" });
+    return res.status(400).json({ error: "Falta el parámetro ?producto" });
   }
 
   try {
@@ -19,33 +18,28 @@ app.post("/scrape", async (req, res) => {
     });
     const page = await browser.newPage();
 
+    // Ir a la página de búsqueda
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
     await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Ejemplo: busca el primer título y precio (ajústalo luego con selectores correctos)
+    // Extraer título y precio del primer resultado
     const data = await page.evaluate(() => {
-      const title = document.querySelector("h1, .product-title")?.innerText || "No encontrado";
-      const price = document.querySelector(".price")?.innerText || "N/A";
-      return { title, price };
+      const titleEl = document.querySelector(".product-title");
+      const priceEl = document.querySelector(".price");
+      return {
+        title: titleEl ? titleEl.innerText.trim() : "No encontrado",
+        price: priceEl ? priceEl.innerText.trim() : "Sin precio",
+      };
     });
 
     await browser.close();
-
-    res.json({
-      producto,
-      ...data,
-    });
+    res.json({ producto, ...data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error en el scraping", details: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("✅ Scraper de Visiotech activo");
-});
-
-const PORT = process.env.PORT || 3000;
+// Start
 app.listen(PORT, () => {
-  console.log(Servidor escuchando en puerto ${PORT});
+  console.log(✅ Servidor corriendo en http://localhost:${PORT});
 });
