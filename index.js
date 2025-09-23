@@ -4,85 +4,47 @@ import puppeteer from "puppeteer";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (_req, res) => {
-  res.send("OK");
-});
-
+// Endpoint para hacer scraping
 app.get("/scrape", async (req, res) => {
-  const producto = (req.query.producto || "").toString().trim();
-  const cantidad = Number(req.query.cantidad || 1);
+  const producto = req.query.producto;
 
   if (!producto) {
-    return res.status(400).json({ ok: false, error: "Falta el parámetro producto" });
+    return res.status(400).json({ error: "Falta el parámetro ?producto=" });
   }
 
-  let browser;
   try {
-    browser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
 
-    const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+    // URL de búsqueda
+    const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
+    await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    // Aceptar cookies si aparece
-    try {
-      await page.click(
-        "#onetrust-accept-btn-handler, button[aria-label='Accept cookies'], .cookie-accept",
-        { timeout: 3000 }
-      );
-    } catch {}
-
+    // Extraer datos del primer resultado
     const data = await page.evaluate(() => {
-      const titleEl =
-        document.querySelector(".product-title, .ProductList .product-name, h1.product-name") ||
-        document.querySelector("a.product-name, a.product-title");
+      const titleEl = document.querySelector(".product-title");
+      const priceEl = document.querySelector(".price");
 
-      const priceEl =
-        document.querySelector(".price, .product-price, .price--final, .price .amount");
-
-      const title = titleEl ? titleEl.textContent.trim() : "No encontrado";
-      const price = priceEl ? priceEl.textContent.trim() : "Sin precio";
-      return { title, price };
+      return {
+        titulo: titleEl ? titleEl.innerText.trim() : "No encontrado",
+        precio: priceEl ? priceEl.innerText.trim() : "Sin precio"
+      };
     });
 
-    // Normalizar precio
-    let priceNum = null;
-    if (data.price && data.price !== "Sin precio") {
-      const normalized = data.price
-        .replace(/[^\d.,-]/g, "")
-        .replace(/\.(?=\d{3}(?:[^\d]|$))/g, "")
-        .replace(",", ".");
-      const parsed = parseFloat(normalized);
-      if (!Number.isNaN(parsed)) priceNum = parsed;
-    }
+    await browser.close();
 
-    const total = priceNum != null ? priceNum * cantidad : null;
-
-    res.json({
-      ok: true,
-      query: { producto, cantidad },
-      url,
-      title: data.title,
-      price: data.price,
-      priceNum,
-      total,
-    });
-  } catch (err) {
-    console.error("Error en /scrape:", err);
-    res.status(500).json({ ok: false, error: String(err) });
-  } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch {}
-    }
+    res.json(data);
+  } catch (error) {
+    console.error("Error en scraping:", error);
+    res.status(500).json({ error: "Fallo en el scraping" });
   }
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
-  console.log("Servidor corriendo en http://localhost:" + PORT);
+  console.log("Servidor corriendo en puerto " + PORT);
 });
