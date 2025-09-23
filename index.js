@@ -5,7 +5,7 @@ import * as cheerio from "cheerio";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz (comprobación rápida de que funciona)
+// Endpoint raíz para comprobar que el servidor funciona
 app.get("/", (req, res) => {
   res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
 });
@@ -19,7 +19,7 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
+    const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
     const { data } = await axios.get(url);
 
     const $ = cheerio.load(data);
