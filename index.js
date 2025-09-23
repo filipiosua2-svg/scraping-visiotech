@@ -20,7 +20,7 @@ app.get('/scrape', async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Ir a la página de búsqueda
+    // URL corregida con template string
     const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
