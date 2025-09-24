@@ -1,10 +1,11 @@
 import express from "express";
+import chromium from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz
+// Endpoint raíz (para comprobar que el servidor está activo)
 app.get("/", (req, res) => {
   res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
 });
@@ -12,34 +13,35 @@ app.get("/", (req, res) => {
 // Endpoint de scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
-
   if (!producto) {
     return res.status(400).json({ error: "Falta el parámetro ?producto=" });
   }
 
   try {
-    const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
-
-    // Lanzar Chrome con puppeteer-core (Render ya lo tiene instalado)
+    // Lanzar navegador con Chromium de chrome-aws-lambda
     const browser = await puppeteer.launch({
-      executablePath: "/usr/bin/google-chrome",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless
     });
 
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.goto(
+      "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto),
+      { waitUntil: "domcontentloaded" }
+    );
 
-    // Extraer datos del primer producto
+    // Extraer datos
     const result = await page.evaluate(() => {
-      const title = document.querySelector(".product-title")?.innerText?.trim() || "No encontrado";
-      const description = document.querySelector(".product-description")?.innerText?.trim() || "Sin descripción";
-      const price = document.querySelector(".price")?.innerText?.trim() || "Sin precio";
-      return { titulo: title, descripcion: description, precio: price };
+      const title = document.querySelector(".product-title")?.innerText || "No encontrado";
+      const desc = document.querySelector(".product-description")?.innerText || "Sin descripción";
+      const price = document.querySelector(".price")?.innerText || "Sin precio";
+      return { titulo: title, descripcion: desc, precio: price };
     });
 
     await browser.close();
     res.json(result);
-
   } catch (err) {
     console.error("Error en scraping:", err.message);
     res.status(500).json({ error: "Fallo en el scraping" });
