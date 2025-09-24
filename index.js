@@ -19,17 +19,20 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    // 🔥 Aquí va con comillas + concatenación, nada de backticks
+    // 🔥 URL con concatenación, igual que ya usabas
     const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
     const { data } = await axios.get(url);
 
     const $ = cheerio.load(data);
 
-    const titleEl = $(".product-title").first();
-    const priceEl = $(".price").first();
+    // Ajustamos selectores a lo que realmente aparece en la web
+    const titleEl = $(".product-name a").first(); // nombre del producto
+    const descEl = $(".product-description").first(); // descripción corta
+    const priceEl = $(".price").first(); // seguirá vacío sin login
 
     const result = {
       titulo: titleEl.text().trim() || "No encontrado",
+      descripcion: descEl.text().trim() || "Sin descripción",
       precio: priceEl.text().trim() || "Sin precio"
     };
 
