@@ -1,15 +1,15 @@
 {
-  "name": "raspado-visiotech",
+  "name": "scraping-visiotech-puppeteer",
   "version": "1.0.0",
-  "description": "Microservicio Node.js para scrapear productos de Visiotech en Render",
+  "description": "Microservicio Node.js con Puppeteer para scrapear productos de Visiotech",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "puppeteer install"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "puppeteer": "^21.6.0"
   }
 }
