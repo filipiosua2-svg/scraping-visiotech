@@ -3,9 +3,6 @@ services:
     name: scraping-visiotech
     env: node
     plan: free
-    branch: main
     buildCommand: "npm install"
     startCommand: "npm start"
-    envVars:
-      - key: NODE_ENV
-        value: production
+    branch: main
