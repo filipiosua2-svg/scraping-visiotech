@@ -1,16 +1,15 @@
 import express from "express";
-import axios from "axios";
-import * as cheerio from "cheerio";
+import puppeteer from "puppeteer";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz (para probar que el servidor está vivo)
+// Endpoint raíz (para comprobar servidor)
 app.get("/", (req, res) => {
-  res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
+  res.send("✅ Servidor con Puppeteer activo. Usa /scrape?producto=XXXX");
 });
 
-// Endpoint de scraping
+// Endpoint de scraping con Puppeteer
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -19,31 +18,31 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    // 🔥 URL con concatenación, igual que ya usabas
-    const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
-    const { data } = await axios.get(url);
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
-    const $ = cheerio.load(data);
+    const page = await browser.newPage();
 
-    // Ajustamos selectores a lo que realmente aparece en la web
-    const titleEl = $(".product-name a").first(); // nombre del producto
-    const descEl = $(".product-description").first(); // descripción corta
-    const priceEl = $(".price").first(); // seguirá vacío sin login
+    const url =
+      "https://www.visiotechsecurity.com/es/search?q=" +
+      encodeURIComponent(producto);
 
-    const result = {
-      titulo: titleEl.text().trim() || "No encontrado",
-      descripcion: descEl.text().trim() || "Sin descripción",
-      precio: priceEl.text().trim() || "Sin precio"
-    };
+    await page.goto(url, { waitUntil: "domcontentloaded" });
 
-    res.json(result);
+    // Solo título de la página como prueba
+    const pageTitle = await page.title();
+
+    await browser.close();
+
+    res.json({ producto, titulo: pageTitle });
   } catch (err) {
-    console.error("Error en scraping:", err.message);
-    res.status(500).json({ error: "Fallo en el scraping" });
+    console.error("Error en Puppeteer:", err.message);
+    res.status(500).json({ error: "Fallo en Puppeteer" });
   }
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
