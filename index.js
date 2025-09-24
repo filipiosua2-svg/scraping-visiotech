@@ -5,12 +5,12 @@ import * as cheerio from "cheerio";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Endpoint raíz
+// Endpoint raíz (para probar que el servidor está vivo)
 app.get("/", (req, res) => {
   res.send("✅ Servidor activo. Usa /scrape?producto=XXXX");
 });
 
-// Endpoint scraping
+// Endpoint de scraping
 app.get("/scrape", async (req, res) => {
   const producto = req.query.producto;
 
@@ -19,20 +19,18 @@ app.get("/scrape", async (req, res) => {
   }
 
   try {
-    const url = https://www.visiotechsecurity.com/es/search?q=${encodeURIComponent(producto)};
+    // 🔥 Aquí va con comillas + concatenación, nada de backticks
+    const url = "https://www.visiotechsecurity.com/es/search?q=" + encodeURIComponent(producto);
     const { data } = await axios.get(url);
 
     const $ = cheerio.load(data);
 
-    // Ajustamos selectores reales de Visiotech
-    const titleEl = $(".product-item .product-name a").first();
-    const descEl = $(".product-item .product-description").first();
-    const priceEl = $(".price").first(); // No estará visible sin login
+    const titleEl = $(".product-title").first();
+    const priceEl = $(".price").first();
 
     const result = {
       titulo: titleEl.text().trim() || "No encontrado",
-      descripcion: descEl.text().trim() || "Sin descripción",
-      precio: priceEl.text().trim() || "Sin precio (requiere login)"
+      precio: priceEl.text().trim() || "Sin precio"
     };
 
     res.json(result);
@@ -42,6 +40,7 @@ app.get("/scrape", async (req, res) => {
   }
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto " + PORT);
 });
